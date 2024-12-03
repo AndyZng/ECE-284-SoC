@@ -199,13 +199,31 @@ initial begin
 
 
     /////// Kernel data writing to L0 ///////
-    ...
+    #0.5 clk = 1'b0; l0_wr = 1; load = 1; A_pmem = 11'b00000000000;
+    #0.5 clk = 1'b1; 
+
+    for (t = 0; t < col; t = t + 1) begin
+        #0.5 clk = 1'b0; w_scan_file = $fscanf(w_file, "%32b", D_xmem); A_pmem = A_pmem + 1;
+        #0.5 clk = 1'b1; 
+    end
+
+    #0.5 clk = 1'b0; l0_wr = 0; load = 0; A_pmem = 0;
+    #0.5 clk = 1'b1;
     /////////////////////////////////////
 
 
 
     /////// Kernel loading to PEs ///////
-    ...
+        #0.5 clk = 1'b0; execute = 1; l0_rd = 1;
+        #0.5 clk = 1'b1; 
+
+        for (i = 0; i < len_kij; i = i + 1) begin
+        #0.5 clk = 1'b0; 
+        #0.5 clk = 1'b1; 
+        end
+
+        #0.5 clk = 1'b0; execute = 0; l0_rd = 0;
+        #0.5 clk = 1'b1;
     /////////////////////////////////////
   
 
@@ -224,13 +242,31 @@ initial begin
 
 
     /////// Activation data writing to L0 ///////
-    ...
+        #0.5 clk = 1'b0; ififo_wr = 1; A_xmem = 11'b00000000000;
+        #0.5 clk = 1'b1;
+
+        for (t = 0; t < len_nij; t = t + 1) begin
+        #0.5 clk = 1'b0; x_scan_file = $fscanf(x_file, "%32b", D_xmem); A_xmem = A_xmem + 1;
+        #0.5 clk = 1'b1;
+        end
+
+        #0.5 clk = 1'b0; ififo_wr = 0; A_xmem = 0;
+        #0.5 clk = 1'b1;
     /////////////////////////////////////
 
 
 
     /////// Execution ///////
-    ...
+        #0.5 clk = 1'b0; execute = 1;
+        #0.5 clk = 1'b1;
+
+        for (i = 0; i < len_onij; i = i + 1) begin
+        #0.5 clk = 1'b0;
+        #0.5 clk = 1'b1;
+        end
+
+        #0.5 clk = 1'b0; execute = 0;
+        #0.5 clk = 1'b1;
     /////////////////////////////////////
 
 
@@ -238,7 +274,17 @@ initial begin
     //////// OFIFO READ ////////
     // Ideally, OFIFO should be read while execution, but we have enough ofifo
     // depth so we can fetch out after execution.
-    ...
+        #0.5 clk = 1'b0; ofifo_rd = 1;
+        #0.5 clk = 1'b1;
+
+        for (i = 0; i < len_onij; i = i + 1) begin
+        #0.5 clk = 1'b0;
+        $display("OFIFO Output %d: %h", i, sfp_out);
+        #0.5 clk = 1'b1;
+        end
+
+        #0.5 clk = 1'b0; ofifo_rd = 0;
+        #0.5 clk = 1'b1;`
     /////////////////////////////////////
 
 
@@ -336,7 +382,6 @@ end
 
 
 endmodule
-
 
 
 
