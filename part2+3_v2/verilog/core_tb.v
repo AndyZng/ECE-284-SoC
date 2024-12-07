@@ -116,7 +116,7 @@ initial begin
   #0.5 clk = 1'b0;   reset = 0;
   #0.5 clk = 1'b1; 
 
-  #0.5 clk = 1'b0;   
+	#0.5 clk = 1'b0;
   #0.5 clk = 1'b1;   
   /////////////////////////
 
@@ -126,7 +126,7 @@ initial begin
     #0.5 clk = 1'b1;   
   end
 
-  #0.5 clk = 1'b0;  WEN_xmem = 1;  CEN_xmem = 1; A_xmem = 0;
+	#0.5 clk = 1'b0;  WEN_xmem = 1;  CEN_xmem = 1; A_xmem = 0;
   #0.5 clk = 1'b1; 
 
   $fclose(x_file);
@@ -136,15 +136,15 @@ initial begin
   for (kij=0; kij<9; kij=kij+1) begin  // kij loop
 
     case(kij)
-     0: w_file_name = "weight_kij0.txt";
-     1: w_file_name = "weight_kij1.txt";
-     2: w_file_name = "weight_kij2.txt";
-     3: w_file_name = "weight_kij3.txt";
-     4: w_file_name = "weight_kij4.txt";
-     5: w_file_name = "weight_kij5.txt";
-     6: w_file_name = "weight_kij6.txt";
-     7: w_file_name = "weight_kij7.txt";
-     8: w_file_name = "weight_kij8.txt";
+     0: w_file_name = "../sim/weight_kij0.txt";
+     1: w_file_name = "../sim/weight_kij1.txt";
+     2: w_file_name = "../sim/weight_kij2.txt";
+     3: w_file_name = "../sim/weight_kij3.txt";
+     4: w_file_name = "../sim/weight_kij4.txt";
+     5: w_file_name = "../sim/weight_kij5.txt";
+     6: w_file_name = "../sim/weight_kij6.txt";
+     7: w_file_name = "../sim/weight_kij7.txt";
+     8: w_file_name = "../sim/weight_kij8.txt";
     endcase
     
 
@@ -154,22 +154,22 @@ initial begin
     w_scan_file = $fscanf(w_file,"%s", captured_data);
     w_scan_file = $fscanf(w_file,"%s", captured_data);
 
-    #0.5 clk = 1'b0;   reset = 1;
-    #0.5 clk = 1'b1; 
-
-    for (i=0; i<10 ; i=i+1) begin
-      #0.5 clk = 1'b0;
-      #0.5 clk = 1'b1;  
-    end
-
-    #0.5 clk = 1'b0;   reset = 0;
-    #0.5 clk = 1'b1; 
-
-    #0.5 clk = 1'b0;   
-    #0.5 clk = 1'b1;   
 
 
+  //////// Reset /////////
+  #0.5 clk = 1'b0;   reset = 1;
+  #0.5 clk = 1'b1; 
 
+  for (i=0; i<10 ; i=i+1) begin
+    #0.5 clk = 1'b0;
+    #0.5 clk = 1'b1;  
+  end
+
+  #0.5 clk = 1'b0;   reset = 0;
+  #0.5 clk = 1'b1; 
+
+  #0.5 clk = 1'b0;   
+  #0.5 clk = 1'b1;   
 
     /////// Kernel data writing to memory ///////
 
@@ -244,7 +244,7 @@ initial begin
 
 
     /////// Execution ///////
-    #0.5 clk = 1'b0; execute = 1; l0_rd = 1;
+	  #0.5 clk = 1'b0; execute = 1; l0_rd = 1;
     #0.5 clk = 1'b1;  
     for (i=0; i<len_nij+col; i=i+1) begin
       #0.5 clk = 1'b0;
@@ -265,8 +265,10 @@ initial begin
     out_scan_file = $fscanf(out_file,"%s", captured_data);
     out_scan_file = $fscanf(out_file,"%s", captured_data);
 
+	  if (kij >= 1) begin
     for (i=0; i<len_onij; i=i+1) begin  
       #0.5 clk = 1'b0; ofifo_rd = 1;
+		 acc = 1;
       #0.5 clk = 1'b1;  
       if (ofifo_valid) begin
         out_scan_file = $fscanf(out_file,"%128b", answer); // assuming answer is 128 bits
@@ -280,8 +282,9 @@ initial begin
         end
       end
     end
+	  end
 
-    #0.5 clk = 1'b0; ofifo_rd = 0;
+	  #0.5 clk = 1'b0; ofifo_rd = 0; acc = 0;
     #0.5 clk = 1'b1;  
 
     $fclose(w_file);

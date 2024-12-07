@@ -98,9 +98,8 @@ generate
             .clk(clk),
             .reset(reset),
             .acc(acc),
-            .relu(0), // adjust later
+            .relu(1'b0), // adjust later
             .in(ofifo_out[psum_bw*(i+1)-1:psum_bw*i]),
-            .prev_psum(Q_pmem[psum_bw*(i+1)-1:psum_bw*i]),
             .out(sfp_out[psum_bw*(i+1)-1:psum_bw*i])
         );
     end

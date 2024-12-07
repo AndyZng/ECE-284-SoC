@@ -12,7 +12,7 @@ module sfp(clk, reset, acc, relu, in, out);
 	assign out = psum_q;
 
 	always @ (posedge clk) begin
-		if(reset == 1)
+		if(reset)
 			psum_q <= 0;
 		if(acc == 1)
 			psum_q <= psum_q + in;
