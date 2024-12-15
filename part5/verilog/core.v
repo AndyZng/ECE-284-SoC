@@ -41,9 +41,8 @@ assign A_pmem = inst[17:7];
 assign ofifo_rd = inst[6];
 assign execute = inst[1];
 assign load = inst[0];
-assign mode_control = inst[5:4];  // 2-bit control for PE mode
+assign mode_control = inst[5:4];
 
-// Instantiate IFIFO to load weight and input data into PE
 wire [bw-1:0] ififo_out;
 wire ififo_empty;
 ififo #(.bw(bw)) ififo_inst (
@@ -57,7 +56,6 @@ ififo #(.bw(bw)) ififo_inst (
     .empty(ififo_empty)
 );
 
-// Instantiate multiple PEs in the array
 genvar i;
 generate
     for (i = 0; i < col; i = i + 1) begin : pe_gen
