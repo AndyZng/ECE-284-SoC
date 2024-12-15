@@ -1,9 +1,9 @@
 module core (
     clk,
     reset,
-    [33:0] inst,
-    [bw*row-1:0] D_xmem,
-    [psum_bw*col-1:0] sfp_out,
+    inst,
+    D_xmem,
+    sfp_out,
     ofifo_valid
 );
 
@@ -13,65 +13,81 @@ parameter bw = 4;
 parameter psum_bw = 16;
 
 input clk, reset;
-input [33:0] inst;
-input [bw*row-1:0] D_xmem;  // Data input from memory
-output [psum_bw*col-1:0] sfp_out;  // Final output from PEs
+input [34:0] inst;
+input signed [bw*row-1:0] D_xmem; 
+output signed [psum_bw*col-1:0] sfp_out; 
 output ofifo_valid;
 
-// Control signals extraction
-wire acc;
-wire CEN_xmem;
-wire WEN_xmem;
-wire [10:0] A_xmem;
-wire CEN_pmem;
-wire WEN_pmem;
-wire [10:0] A_pmem;
-wire ofifo_rd;
-wire execute;
-wire load;
-wire [1:0] mode_control;
+// Extract control signals from inst
+wire mode = inst[34];
+wire acc         = inst[33];
+wire CEN_pmem    = inst[32];
+wire WEN_pmem    = inst[31];
+wire [10:0] A_pmem= inst[30:20];
+wire CEN_xmem    = inst[19];
+wire WEN_xmem    = inst[18];
+wire [10:0] A_xmem= inst[17:7];
+wire ofifo_rd    = inst[6];
+wire l0_rd       = inst[3];
+wire l0_wr       = inst[2];
+wire execute     = inst[1];
+wire load        = inst[0];
 
-assign acc = inst[33];
-assign CEN_xmem = inst[32];
-assign WEN_xmem = inst[31];
-assign A_xmem = inst[30:20];
-assign CEN_pmem = inst[19];
-assign WEN_pmem = inst[18];
-assign A_pmem = inst[17:7];
-assign ofifo_rd = inst[6];
-assign execute = inst[1];
-assign load = inst[0];
-assign mode_control = inst[5:4];
-
-wire [bw-1:0] ififo_out;
-wire ififo_empty;
-ififo #(.bw(bw)) ififo_inst (
-    .clk(clk),
-    .reset(reset),
-    .data_in(D_xmem),
-    .write_enable(WEN_xmem),
-    .read_enable(execute),
-    .data_out(ififo_out),
-    .full(),
-    .empty(ififo_empty)
+wire signed [bw*row-1:0] Q_xmem;
+sram_32b_w2048 xmem_inst (
+    .CLK(clk),
+    .D(D_xmem),
+    .Q(Q_xmem),
+    .CEN(CEN_xmem),
+    .WEN(WEN_xmem),
+    .A(A_xmem)
 );
 
+wire signed [psum_bw*col-1:0] Q_pmem;
+sram_128b_w2048 pmem_inst (
+    .CLK(clk),
+    .D(sfp_out),
+    .Q(Q_pmem),
+    .CEN(CEN_pmem),
+    .WEN(WEN_pmem),
+    .A(A_pmem)
+);
+
+// l0_in
+wire signed [bw*row-1:0] l0_in = Q_xmem;
+
+// Corelet inst
+wire signed [psum_bw*col-1:0] ofifo_out;
+wire ofifo_o_valid;
+
+corelet #(
+    .row(row),
+    .col(col),
+    .bw(bw),
+    .psum_bw(psum_bw)
+) corelet_inst (
+    .clk(clk),
+    .reset(reset),
+    .inst(inst),
+    .l0_in(l0_in),
+    .ofifo_out(ofifo_out),
+    .ofifo_o_valid(ofifo_o_valid)
+);
+
+assign ofifo_valid = ofifo_o_valid;
+
+// SFP for accumulation / ReLU
 genvar i;
 generate
-    for (i = 0; i < col; i = i + 1) begin : pe_gen
-        pe #(
-            .bw(bw),
-            .psum_bw(psum_bw)
-        ) pe_inst (
+    for (i = 0; i < col; i = i + 1) begin : sfp_gen
+        sfp #(.bw(psum_bw)) sfp_instance (
             .clk(clk),
             .reset(reset),
-            .input_data(ififo_out),
-            .weight_data(D_xmem),  // Assuming D_xmem contains weight data
-            .mode_control(mode_control),
-            .write_enable(execute),
-            .read_enable(ofifo_rd),
-            .output_data(sfp_out[psum_bw*(i+1)-1:psum_bw*i]),
-            .valid(ofifo_valid)
+            .acc(acc),
+            .relu(1'b0), // currently no relu
+            .in(ofifo_out[psum_bw*(i+1)-1:psum_bw*i]),
+            .prev_psum(Q_pmem[psum_bw*(i+1)-1:psum_bw*i]),
+            .out(sfp_out[psum_bw*(i+1)-1:psum_bw*i])
         );
     end
 endgenerate

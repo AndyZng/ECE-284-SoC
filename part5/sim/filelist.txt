@@ -1,4 +1,5 @@
 ../verilog/core.v
+../verilog/core_tb.v
 ../verilog/corelet.v
 ../verilog/fifo_depth64.v
 ../verilog/fifo_mux_16_1.v
@@ -13,3 +14,4 @@
 ../verilog/sfp.v
 ../verilog/sram_32b_w2048.v
 ../verilog/sram_128b_w2048.v
+../verilog/ififo.v
