@@ -38,20 +38,17 @@ module core_tb;
         // Wait for a few clock cycles
         #10;
 
-        // Stimulus #1: Provide some data to PE
         data_in = 16'hA5A5;
         data_in_valid = 1;
         #10;  // Wait for a clock cycle
         data_in_valid = 0;
         
-        // Stimulus #2: Provide more data
         #10;
         data_in = 16'h5A5A;
         data_in_valid = 1;
         #10;
         data_in_valid = 0;
         
-        // Stimulus #3: Provide some data and wait for data_out to be valid
         #10;
         data_in = 16'h1234;
         data_in_valid = 1;
