@@ -1,1 +1,4 @@
-
+core_tb.v   
+module_core.v
+module_ififo.v
+module_pe.v
