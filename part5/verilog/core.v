@@ -1,10 +1,10 @@
 module core (
-    input clk,
-    input reset,
-    input [33:0] inst,
-    input [bw*row-1:0] D_xmem,
-    output [psum_bw*col-1:0] sfp_out,
-    output ofifo_valid
+    clk,
+    reset,
+    [33:0] inst,
+    [bw*row-1:0] D_xmem,
+    [psum_bw*col-1:0] sfp_out,
+    ofifo_valid
 );
 
 parameter row = 8;
